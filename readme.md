@@ -9,7 +9,7 @@ This project aims to regularly update asset price data in the AssetVIsion MongoD
 -   requests
 
 
-## How to run the API
+## How to run the API Price feeder
 
 1.  Clone this repository to your local machine.
 2.  Install the required packages by running `pip install -r requirements.txt`.
