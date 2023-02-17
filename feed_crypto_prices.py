@@ -2,24 +2,24 @@ import schedule
 import time
 import requests
 import ast
+from datetime import datetime
 import json
 
 
-def get_login(api_url):
+def get_login(login_url):
     headers = {
         "accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded"
     }
-    data = {
-        "username": "admin",
-        "password": "1234"
-    }
+    payload = 'grant_type=&username=admin&password=1234&scope=&client_id=&client_secret='
 
-    response = requests.post(api_url, headers=headers, data=data)
-    return ast.literal_eval(response.content.decode('utf-8'))["access_token"]
+    response = requests.request("POST", login_url, headers=headers, data=payload)
+    token = ast.literal_eval(response.content.decode('utf-8'))["access_token"]
+    print("Logged in")
+    return token
 
 def get_all_assets(api,asset_class):
-    token = get_login(api+ "login/")
+    token = get_login(api+ "login")
     headers = {
         "accept": "application/json",
         "Authorization": "Bearer "+ token
@@ -29,6 +29,7 @@ def get_all_assets(api,asset_class):
     if response.status_code == 200:
         assets = response.json()
         types = set([asset['symbol'] for asset in  assets if asset['asset_class']==asset_class])
+        print("All selected assets are " + str(types))
         return types
     else:
         print("Request failed with status code:", response.status_code)
@@ -36,6 +37,7 @@ def get_all_assets(api,asset_class):
 
 # Function that updates the price of the assets
 def get_price(ticker):
+    print("Getting price of " + ticker)
     url = "https://min-api.cryptocompare.com/data/price"
     params = {
         "fsym": ticker,
@@ -46,10 +48,12 @@ def get_price(ticker):
     if response.status_code == 200:
         data = response.json()
         price = data["USD"]
+        print(price)
         return price
 
-def update_price(tickers, api ):
-    token = get_login(api+ "login/")
+def update_price(tickers, api):
+    print(str(datetime.now())+" - Starting updating prices")
+    token = get_login(api+ "login")
     for ticker in tickers : 
         price = get_price(ticker)
         details = {
@@ -63,13 +67,13 @@ def update_price(tickers, api ):
         }
         response = requests.put(url, headers=header)
 
-        print(response.content)
 
-api = "http://localhost:8000/"
+api = "https://asset-vision-api-zznkesfula-oa.a.run.app/"
 
 all_crypto = get_all_assets(api,'Cryptocurrency' )
+
 # Schedule the price update to run every hour
-schedule.every().hour.do(update_price, all_crypto, api)
+schedule.every().hour.do(update_price,tickers = all_crypto, api= api)
 
 while True:
    schedule.run_pending()
