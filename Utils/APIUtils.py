@@ -14,7 +14,7 @@ def get_login(login_url):
 
     response = requests.request("POST", login_url, headers=headers, data=payload)
     token = ast.literal_eval(response.content.decode('utf-8'))["access_token"]
-    print(f"Logged in{datetime.now()}")
+    print(f"Logged in {datetime.now()}")
     return token
 
 def get_all_assets_by_cat(api,asset_class, token):
@@ -34,13 +34,32 @@ def get_all_assets_by_cat(api,asset_class, token):
 
 def update_price(tickers, api, get_pricefunc):
     print(f"{str(datetime.now())} - Starting updating prices")
-    token = get_login(f"{api}login")
-    for ticker in tickers: 
-        price = get_pricefunc(ticker)
-        details = {
-            "last_price":price
-        }
-        url = f"{api}asset/{ticker}?asset_details={json.dumps(details) }"
+    try:
+        token = get_login(f"{api}login")
+        for ticker in tickers: 
+            price = get_pricefunc(ticker)
+            details = {
+                "last_price":price
+            }
+            url = f"{api}asset/{ticker}?asset_details={json.dumps(details) }"
 
-        header = {"accept": "application/json", "Authorization": f"Bearer {token}"}
-        response = requests.put(url, headers=header)
+            header = {"accept": "application/json", "Authorization": f"Bearer {token}"}
+            response = requests.put(url, headers=header)
+    except Exception:
+        print("Something went wrong")
+
+def update_rate(tickers, api, get_pricefunc):
+    print(f"{str(datetime.now())} - Starting updating prices")
+    try:
+        token = get_login(f"{api}login")
+        for ticker in tickers: 
+            price = get_pricefunc(ticker)
+            details = {
+                "last_rate":price
+            }
+            url = f"{api}rate/{ticker}?rate_details={json.dumps(details) }"
+
+            header = {"accept": "application/json", "Authorization": f"Bearer {token}"}
+            response = requests.put(url, headers=header)
+    except Exception:
+        print("Something went wrong")
